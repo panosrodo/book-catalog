@@ -7,6 +7,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 // AutoMapper
 builder.Services.AddAutoMapper(typeof(MappingProfile));
+builder.Services.AddScoped<IBookRepository, BookRepository>();
+builder.Services.AddScoped<IBookService, BookService>();
 
 // Repositories & Services
 builder.Services.AddScoped<IBookRepository, BookRepository>();
