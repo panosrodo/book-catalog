@@ -1,5 +1,4 @@
 ﻿using BookCatalog.DTOs;
-using BookCatalog.Repositories;
 using BookCatalog.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,9 +10,9 @@ namespace BookCatalog.Controllers
     {
         private readonly IBookService _service;
 
-        public BooksController()
+        public BooksController(IBookService service)
         {
-            _service = new BookService(new BookRepository());
+            _service = service;
         }
 
         public ActionResult Index()
