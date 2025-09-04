@@ -1,0 +1,29 @@
+﻿@model IEnumerable<BookCatalog.Data.User>
+
+<h2>Λίστα Χρηστών</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>Username</th>
+            <th>Role</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Model)
+        {
+            <tr>
+                <td>@user.Username</td>
+                <td>@user.Role</td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@user.Id">Λεπτομέρειες</a> |
+                    <a asp-action="Edit" asp-route-id="@user.Id">Επεξεργασία</a> |
+                    <a asp-action="Delete" asp-route-id="@user.Id">Διαγραφή</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a asp-action="Create">Προσθήκη νέου χρήστη</a>
