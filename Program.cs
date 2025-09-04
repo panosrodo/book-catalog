@@ -1,3 +1,6 @@
+﻿using BookCatalog.Data;
+using Microsoft.EntityFrameworkCore;
+
 namespace BookCatalog
 {
     public class Program
@@ -8,6 +11,10 @@ namespace BookCatalog
 
             // Add services to the container.
             builder.Services.AddControllersWithViews();
+
+            // Σύνδεση του DbContext με το connection string από το appsettings.json
+            builder.Services.AddDbContext<BookCatalogDBContext>(options =>
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
             var app = builder.Build();
 
