@@ -1,43 +1,45 @@
 ﻿using BookCatalog.Data;
+using BookCatalog.Repositories;
+using BookCatalog.Services;
 using Microsoft.EntityFrameworkCore;
 
-namespace BookCatalog
+var builder = WebApplication.CreateBuilder(args);
+
+// AutoMapper
+builder.Services.AddAutoMapper(typeof(MappingProfile));
+
+// Repositories & Services
+builder.Services.AddScoped<IBookRepository, BookRepository>();
+builder.Services.AddScoped<IBookService, BookService>();
+builder.Services.AddScoped<IUserService, UserService>();
+
+// Database context
+builder.Services.AddDbContext<BookCatalogDBContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// MVC Controllers & Views
+builder.Services.AddControllersWithViews();
+
+// Authentication/Authorization
+builder.Services.AddAuthentication();
+builder.Services.AddAuthorization();
+
+var app = builder.Build();
+
+// Middleware pipeline
+if (app.Environment.IsDevelopment())
 {
-    public class Program
-    {
-        public static void Main(string[] args)
-        {
-            var builder = WebApplication.CreateBuilder(args);
-
-            // Add services to the container.
-            builder.Services.AddControllersWithViews();
-
-            // Σύνδεση του DbContext με το connection string από το appsettings.json
-            builder.Services.AddDbContext<BookCatalogDBContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-            var app = builder.Build();
-
-            // Configure the HTTP request pipeline.
-            if (!app.Environment.IsDevelopment())
-            {
-                app.UseExceptionHandler("/Home/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-                app.UseHsts();
-            }
-
-            app.UseHttpsRedirection();
-            app.UseStaticFiles();
-
-            app.UseRouting();
-
-            app.UseAuthorization();
-
-            app.MapControllerRoute(
-                name: "default",
-                pattern: "{controller=Home}/{action=Index}/{id?}");
-
-            app.Run();
-        }
-    }
+    app.UseDeveloperExceptionPage();
 }
+
+app.UseHttpsRedirection();
+app.UseStaticFiles();
+
+app.UseRouting();
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapDefaultControllerRoute();
+
+app.Run();
