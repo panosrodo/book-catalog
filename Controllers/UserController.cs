@@ -1,4 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using BookCatalog.Data;
 using BookCatalog.Services;
 
@@ -13,7 +17,65 @@ namespace BookCatalog.Controllers
             _userService = userService;
         }
 
+        // --- AUTHENTICATION ---
+
+        // GET: /User/Login
+        [AllowAnonymous]
+        public IActionResult Login()
+        {
+            return View();
+        }
+
+        // POST: /User/Login
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Login(string username, string password)
+        {
+            var user = _userService.GetUserByUsername(username);
+
+            // Password hashing αν προλαβω
+            if (user != null && user.Password == password)
+            {
+                var claims = new List<Claim>
+                {
+                    new Claim(ClaimTypes.Name, user.Username),
+                    new Claim(ClaimTypes.Role, user.Role)
+                };
+
+                var claimsIdentity = new ClaimsIdentity(
+                    claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+                await HttpContext.SignInAsync(
+                    CookieAuthenticationDefaults.AuthenticationScheme,
+                    new ClaimsPrincipal(claimsIdentity));
+
+                return RedirectToAction("Index", "Home");
+            }
+
+            ModelState.AddModelError("", "Λάθος στοιχεία!");
+            return View();
+        }
+
+        // GET: /User/Logout
+        [Authorize]
+        public async Task<IActionResult> Logout()
+        {
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return RedirectToAction("Login", "User");
+        }
+
+        // GET: /User/AccessDenied
+        [AllowAnonymous]
+        public IActionResult AccessDenied()
+        {
+            return View();
+        }
+
+        // --- CRUD ACTIONS ---
+
         // GET: /User
+        [Authorize]
         public IActionResult Index()
         {
             var users = _userService.GetAllUsers();
@@ -21,6 +83,7 @@ namespace BookCatalog.Controllers
         }
 
         // GET: /User/Details/5
+        [Authorize]
         public IActionResult Details(int id)
         {
             var user = _userService.GetUserById(id);
@@ -32,6 +95,7 @@ namespace BookCatalog.Controllers
         }
 
         // GET: /User/Create
+        [Authorize(Roles = "Admin")]
         public IActionResult Create()
         {
             return View();
@@ -39,6 +103,7 @@ namespace BookCatalog.Controllers
 
         // POST: /User/Create
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         [ValidateAntiForgeryToken]
         public IActionResult Create(User user)
         {
@@ -51,6 +116,7 @@ namespace BookCatalog.Controllers
         }
 
         // GET: /User/Edit/5
+        [Authorize(Roles = "Admin")]
         public IActionResult Edit(int id)
         {
             var user = _userService.GetUserById(id);
@@ -63,6 +129,7 @@ namespace BookCatalog.Controllers
 
         // POST: /User/Edit/5
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         [ValidateAntiForgeryToken]
         public IActionResult Edit(int id, User user)
         {
@@ -80,6 +147,7 @@ namespace BookCatalog.Controllers
         }
 
         // GET: /User/Delete/5
+        [Authorize(Roles = "Admin")]
         public IActionResult Delete(int id)
         {
             var user = _userService.GetUserById(id);
@@ -92,6 +160,7 @@ namespace BookCatalog.Controllers
 
         // POST: /User/Delete/5
         [HttpPost, ActionName("Delete")]
+        [Authorize(Roles = "Admin")]
         [ValidateAntiForgeryToken]
         public IActionResult DeleteConfirmed(int id)
         {
